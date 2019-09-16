@@ -12,14 +12,18 @@
     "minimum-stability": "stable",
     "require": {
         "php": "~7.1",
-        "ext-swoole": "~4.4"
+        "ext-swoole": "~4.4",
+        "psr/container": "^1.0"
     },
     "autoload": {
         "psr-4": {
             "unzxin\\zswCore\\": "src/"
-        }
+        },
+        "files": [
+        ]
     },
     "require-dev": {
-        "swoole/ide-helper": "^4.4"
+        "swoole/ide-helper": "^4.4",
+        "topthink/think-container": "^2.0"
     }
 }
