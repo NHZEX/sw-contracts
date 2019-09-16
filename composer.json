@@ -1,0 +1,23 @@
+{
+    "name": "nhzex/zsw-core",
+    "description": "zx swoole core",
+    "type": "library",
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "auooru",
+            "email": "auooru@163.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": "~7.1",
+        "ext-swoole": "~4.4"
+    },
+    "autoload": {
+        "unzxin\\zswCore\\": "src/"
+    },
+    "require-dev": {
+        "swoole/ide-helper": "^4.4"
+    }
+}
