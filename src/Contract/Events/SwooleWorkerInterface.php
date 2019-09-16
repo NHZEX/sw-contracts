@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace unzxin\zswCore\Contract\Event;
+namespace unzxin\zswCore\Contract\Events;
 
 use Swoole\Http\Server as HttpServer;
 use Swoole\Server;
