@@ -15,7 +15,9 @@
         "ext-swoole": "~4.4"
     },
     "autoload": {
-        "unzxin\\zswCore\\": "src/"
+        "psr-4": {
+            "unzxin\\zswCore\\": "src/"
+        }
     },
     "require-dev": {
         "swoole/ide-helper": "^4.4"
