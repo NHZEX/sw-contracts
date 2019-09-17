@@ -276,7 +276,6 @@ class Event
         }
 
         if (!empty($events)) {
-            var_dump($events);
             foreach ($events as $event) {
                 $name   = false !== strpos($event, '\\') ? substr(strrchr($event, '\\'), 1) : $event;
                 $method = 'on' . $name;
@@ -427,10 +426,10 @@ class Event
     {
         if (0 === strpos($name, 'trigSwoole')) {
             $name = lcfirst(substr($name, 10));
-            return $this->trigger('sw.' . $name, $arguments[0]);
+            return $this->trigger('sw.' . $name, $arguments);
         } elseif (0 === strpos($name, 'onSwoole')) {
             $name = lcfirst(substr($name, 8));
-            return $this->listen('sw.' . $name, $arguments[0]);
+            return $this->listen('sw.' . $name, ...$arguments);
         }
 
         throw new RuntimeException('Unknown method ' . $name);
