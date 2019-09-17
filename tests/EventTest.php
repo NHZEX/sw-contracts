@@ -142,8 +142,6 @@ class EventTest extends TestCase
             return true;
         });
 
-        $this->assertEquals([
-            0 => true,
-        ], $this->event->trigSwooleStart(1, 2, 3));
+        $this->assertTrue($this->event->trigSwooleStart([1, 2, 3], true));
     }
 }

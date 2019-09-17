@@ -43,25 +43,25 @@ use unzxin\zswCore\Contract\EventSubscribeInterface;
  * @method Event onSwooleHandShake(callable $fun); // WebSocket Server
  * @method Event onSwooleOpen(callable $fun); // WebSocket Server
  * @method Event onSwooleMessage(callable $fun); // WebSocket Server
- * @method mixed trigSwooleStart(...$params); // Master
- * @method mixed trigSwooleShutdown(...$params); // Master
- * @method mixed trigSwooleManagerStart(...$params); // Manager
- * @method mixed trigSwooleManagerStop(...$params); // Manager
- * @method mixed trigSwooleWorkerStart(...$params); // Worker
- * @method mixed trigSwooleWorkerStop(...$params); // Worker
- * @method mixed trigSwooleWorkerExit(...$params); // Worker
- * @method mixed trigSwooleWorkerError(...$params); // Worker
- * @method mixed trigSwoolePipeMessage(...$params); // Message
- * @method mixed trigSwooleTask(...$params); // Task
- * @method mixed trigSwooleFinish(...$params); // Task
- * @method mixed trigSwooleConnect(...$params); // Tcp
- * @method mixed trigSwooleReceive(...$params); // Tcp
- * @method mixed trigSwooleClose(...$params); // Tcp
- * @method mixed trigSwoolePacket(...$params); // Udp
- * @method mixed trigSwooleRequest(...$params); // Http Server
- * @method mixed trigSwooleHandShake(...$params); // WebSocket Server
- * @method mixed trigSwooleOpen(...$params); // WebSocket Server
- * @method mixed trigSwooleMessage(...$params); // WebSocket Server
+ * @method mixed trigSwooleStart(array $args, bool $once = false); // Master
+ * @method mixed trigSwooleShutdown(array $args, bool $once = false); // Master
+ * @method mixed trigSwooleManagerStart(array $args, bool $once = false); // Manager
+ * @method mixed trigSwooleManagerStop(array $args, bool $once = false); // Manager
+ * @method mixed trigSwooleWorkerStart(array $args, bool $once = false); // Worker
+ * @method mixed trigSwooleWorkerStop(array $args, bool $once = false); // Worker
+ * @method mixed trigSwooleWorkerExit(array $args, bool $once = false); // Worker
+ * @method mixed trigSwooleWorkerError(array $args, bool $once = false); // Worker
+ * @method mixed trigSwoolePipeMessage(array $args, bool $once = false); // Message
+ * @method mixed trigSwooleTask(array $args, bool $once = false); // Task
+ * @method mixed trigSwooleFinish(array $args, bool $once = false); // Task
+ * @method mixed trigSwooleConnect(array $args, bool $once = false); // Tcp
+ * @method mixed trigSwooleReceive(array $args, bool $once = false); // Tcp
+ * @method mixed trigSwooleClose(array $args, bool $once = false); // Tcp
+ * @method mixed trigSwoolePacket(array $args, bool $once = false); // Udp
+ * @method mixed trigSwooleRequest(array $args, bool $once = false); // Http Server
+ * @method mixed trigSwooleHandShake(array $args, bool $once = false); // WebSocket Server
+ * @method mixed trigSwooleOpen(array $args, bool $once = false); // WebSocket Server
+ * @method mixed trigSwooleMessage(array $args, bool $once = false); // WebSocket Server
  */
 class Event
 {
@@ -426,7 +426,7 @@ class Event
     {
         if (0 === strpos($name, 'trigSwoole')) {
             $name = lcfirst(substr($name, 10));
-            return $this->trigger('sw.' . $name, $arguments);
+            return $this->trigger('sw.' . $name, ...$arguments);
         } elseif (0 === strpos($name, 'onSwoole')) {
             $name = lcfirst(substr($name, 8));
             return $this->listen('sw.' . $name, ...$arguments);
