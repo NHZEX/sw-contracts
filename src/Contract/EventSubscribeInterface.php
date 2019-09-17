@@ -1,7 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace HZEX\TpSwoole;
+namespace unzxin\zswCore\Contract;
+
+use unzxin\zswCore\Event;
 
 interface EventSubscribeInterface
 {

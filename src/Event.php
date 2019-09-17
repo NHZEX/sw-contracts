@@ -10,15 +10,17 @@
 // +----------------------------------------------------------------------
 declare(strict_types=1);
 
-namespace HZEX\TpSwoole;
+namespace unzxin\zswCore;
 
 use Closure;
+use InvalidArgumentException;
 use Psr\Container\ContainerInterface;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
 use RuntimeException;
-use think\Container;
+use unzxin\zswCore\Contract\EventResolverInterface;
+use unzxin\zswCore\Contract\EventSubscribeInterface;
 
 /**
  * 事件管理类
@@ -87,9 +89,24 @@ class Event
      */
     protected $app;
 
-    public function __construct(Container $app)
+    /**
+     * 解决方案
+     * @var EventResolverInterface
+     */
+    protected $resolver;
+
+    public function __construct(ContainerInterface $app)
     {
         $this->app = $app;
+    }
+
+    /**
+     * 设置解决方案
+     * @param EventResolverInterface $resolver
+     */
+    public function setResolver(EventResolverInterface $resolver)
+    {
+        $this->resolver = $resolver;
     }
 
     /**
@@ -121,6 +138,8 @@ class Event
                 $event = $this->bind[$event];
             }
 
+            $event = strtolower($event);
+
             $this->listener[$event] = array_merge($this->listener[$event] ?? [], $listeners);
         }
 
@@ -135,7 +154,7 @@ class Event
      * @param bool     $first    是否优先执行
      * @return $this
      */
-    public function listen(string $event, callable $listener, bool $first = false)
+    public function listen(string $event, $listener, bool $first = false)
     {
         if (!$this->withEvent) {
             return $this;
@@ -144,6 +163,8 @@ class Event
         if (isset($this->bind[$event])) {
             $event = $this->bind[$event];
         }
+
+        $event = strtolower($event);
 
         if ($first && isset($this->listener[$event])) {
             array_unshift($this->listener[$event], $listener);
@@ -166,6 +187,8 @@ class Event
             $event = $this->bind[$event];
         }
 
+        $event = strtolower($event);
+
         return isset($this->listener[$event]);
     }
 
@@ -180,6 +203,8 @@ class Event
         if (isset($this->bind[$event])) {
             $event = $this->bind[$event];
         }
+
+        $event = strtolower($event);
 
         unset($this->listener[$event]);
     }
@@ -200,8 +225,8 @@ class Event
     /**
      * 注册事件订阅者
      * @access public
-     * @param object|object[] $subscriber 订阅者
-     * @param array           $events     事件列表
+     * @param object|string|array $subscriber 订阅者
+     * @param array               $events     事件列表
      * @return $this
      */
     public function subscribe($subscriber, array $events = [])
@@ -213,6 +238,12 @@ class Event
         $subscribers = is_array($subscriber) ? $subscriber : [$subscriber];
 
         foreach ($subscribers as $subscriber) {
+            if (is_string($subscriber)) {
+                $subscriber = $this->makeClass($subscriber);
+            } elseif (!is_object($subscriber)) {
+                throw new InvalidArgumentException('subscriber must is object or class name.');
+            }
+
             if ($subscriber instanceof EventSubscribeInterface) {
                 // 手动订阅
                 $subscriber->subscribe($this);
@@ -228,8 +259,8 @@ class Event
     /**
      * 自动注册事件观察者
      * @access public
-     * @param object $observer 观察者
-     * @param array  $events   事件列表
+     * @param object|string $observer 观察者
+     * @param array         $events   事件列表
      * @return $this
      */
     public function observe($observer, array $events = [])
@@ -237,8 +268,15 @@ class Event
         if (!$this->withEvent) {
             return $this;
         }
+        if (!is_object($observer) && !is_string($observer)) {
+            throw new InvalidArgumentException('subscriber must is object or class name.');
+        }
+        if (is_string($observer)) {
+            $observer = $this->makeClass($observer);
+        }
 
         if (!empty($events)) {
+            var_dump($events);
             foreach ($events as $event) {
                 $name   = false !== strpos($event, '\\') ? substr(strrchr($event, '\\'), 1) : $event;
                 $method = 'on' . $name;
@@ -289,6 +327,8 @@ class Event
             $event = $this->bind[$event];
         }
 
+        $event = strtolower($event);
+
         $result    = [];
         $listeners = $this->listener[$event] ?? [];
         $params    = is_array($params) ? $params : [$params];
@@ -329,11 +369,40 @@ class Event
         } elseif (strpos($event, '::')) {
             $call = $event;
         } else {
-            $obj  = $this->app->make($event);
+            $obj = $this->makeClass($event);
             $call = [$obj, 'handle'];
         }
 
-        return $this->app->invoke($call, $params);
+        return $this->invoke($call, $params);
+    }
+
+    /**
+     * @param mixed $class
+     * @return object
+     */
+    protected function makeClass(string $class)
+    {
+        if ($this->resolver instanceof EventResolverInterface) {
+            $class = $this->resolver->makeClass($class, $this);
+        } elseif ($this->app->has($class)) {
+            $class = $this->app->get($class);
+        } elseif (class_exists($class)) {
+            $class = new $class();
+        } else {
+            throw new RuntimeException("make class failure, invalid class name {$class}.");
+        }
+
+        return $class;
+    }
+
+    protected function invoke($callable, array $vars = [])
+    {
+        if ($this->resolver instanceof EventResolverInterface) {
+            $result = $this->resolver->invoke($callable, $vars, $this);
+        } else {
+            $result = call_user_func_array($callable, $vars);
+        }
+        return $result;
     }
 
     /**
@@ -346,7 +415,7 @@ class Event
      */
     public function triggerSwoole($event, $params = null, bool $once = false)
     {
-        return $this->trigger('sw.' . strtolower($event), $params, $once);
+        return $this->trigger('sw.' . lcfirst($event), $params, $once);
     }
 
     /**
@@ -357,10 +426,10 @@ class Event
     public function __call(string $name, $arguments)
     {
         if (0 === strpos($name, 'trigSwoole')) {
-            $name = strtolower(substr($name, 10));
+            $name = lcfirst(substr($name, 10));
             return $this->trigger('sw.' . $name, $arguments[0]);
         } elseif (0 === strpos($name, 'onSwoole')) {
-            $name = strtolower(substr($name, 8));
+            $name = lcfirst(substr($name, 8));
             return $this->listen('sw.' . $name, $arguments[0]);
         }
 
