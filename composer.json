@@ -13,6 +13,7 @@
     "require": {
         "php": "~7.1",
         "ext-swoole": "~4.4",
+        "ext-sockets": "*",
         "psr/container": "^1.0"
     },
     "require-dev": {
