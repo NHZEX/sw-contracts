@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Process;
+namespace unzxin\zswCore\Process;
 
 use Generator;
 use RuntimeException;
@@ -26,7 +26,7 @@ class IPCMessageProtocol
     /**
      * 通信报文块尺寸
      */
-    public const CHUNK_SIZE   = 65535;
+    protected $chunkSize = 65535;
 
     /**
      * 消息Id
@@ -41,6 +41,22 @@ class IPCMessageProtocol
     private $bufferSet = [];
 
     /**
+     * @param int $chunkSize
+     */
+    public function setChunkSize(int $chunkSize): void
+    {
+        $this->chunkSize = $chunkSize;
+    }
+
+    /**
+     * @return int
+     */
+    public function getChunkSize(): int
+    {
+        return $this->chunkSize;
+    }
+
+    /**
      * 分块传输数据
      * @param int    $workerId
      * @param string $payload
@@ -50,7 +66,7 @@ class IPCMessageProtocol
     {
         $messageId = ++$this->ipcMessageId;
         $payload_len = strlen($payload);
-        $real_chunk_size = self::CHUNK_SIZE - self::HEAD_LEN;
+        $real_chunk_size = $this->chunkSize - self::HEAD_LEN;
         $chunk_id = 0;
         $send_size = 0;
         do {

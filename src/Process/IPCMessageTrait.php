@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace unzxin\zswCore\Process;
 
-use App\Process\IPCMessageProtocol;
 use RuntimeException;
 use Swoole\Coroutine;
 use Swoole\Coroutine\Socket;
@@ -13,7 +12,7 @@ trait IPCMessageTrait
     /**
      * @var IPCMessageProtocol
      */
-    protected $pipeBuffer;
+    protected $ipcBuffer;
 
     /**
      * 监听进程IPC通信
@@ -26,14 +25,14 @@ trait IPCMessageTrait
     {
         Coroutine::create(function () use ($socket, $handle, &$running, $timeout) {
             while ($running) {
-                if (false === $recv = $socket->recv(IPCMessageProtocol::CHUNK_SIZE, $timeout)) {
+                if (false === $recv = $socket->recv($this->ipcBuffer->getChunkSize(), $timeout)) {
                     if ($socket->errCode !== SOCKET_ETIMEDOUT) {
                         throw new RuntimeException("[ipc] socket recv error: ({$socket->errCode}){{$socket->errMsg}}");
                     }
                     continue;
                 }
                 // 从解析器中获取数据帧
-                while ($payload = $this->pipeBuffer->read($recv)) {
+                while ($payload = $this->ipcBuffer->read($recv)) {
                     call_user_func($handle, $payload);
                     break;
                 }
@@ -50,7 +49,7 @@ trait IPCMessageTrait
     protected function sendIPCMessage(Socket $socket, int $workerId, $data)
     {
         $data = serialize($data);
-        foreach ($this->pipeBuffer->generateMsgChunk($workerId, $data) as $chunk) {
+        foreach ($this->ipcBuffer->generateMsgChunk($workerId, $data) as $chunk) {
             $send_len = $socket->sendAll($chunk);
             if (false === $send_len) {
                 throw new RuntimeException("data transmission failed: ({$socket->errCode}){$socket->errMsg}");
