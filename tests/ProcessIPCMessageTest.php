@@ -8,7 +8,10 @@ use unzxin\zswCore\Process\IPCMessageProtocol;
 
 class ProcessIPCMessageTest extends TestCase
 {
-    public function testMsgChunkGenerate()
+    /**
+     * 测试IPC消息块处理
+     */
+    public function testMsgChunkHandle()
     {
         $ipc = new IPCMessageProtocol();
         $ipc->setChunkSize(32);
