@@ -6,6 +6,10 @@ namespace unzxin\zswCore\Process;
 use RuntimeException;
 use Swoole\Coroutine\Socket;
 
+/**
+ * Trait IPCMessageTrait
+ * @package unzxin\zswCore\Process
+ */
 trait IPCMessageTrait
 {
     /**
@@ -16,13 +20,13 @@ trait IPCMessageTrait
     /**
      * 初始化IPC通信
      */
-    protected function initIPCMessage()
+    protected function initIPCMessage(): void
     {
         $this->ipcBuffer = new IPCMessageProtocol();
     }
 
     /**
-     * 接受进程IPC通信
+     * 接收IPC信息
      * @param Socket $socket
      * @param float  $timeout
      * @return array|null
@@ -35,12 +39,12 @@ trait IPCMessageTrait
             }
             return null;
         }
-        // 从解析器中获取数据帧
+        // 从缓冲区中读取有效数据
         return  $this->ipcBuffer->read($recv);
     }
 
     /**
-     * 发送进程IPC信息
+     * 发送IPC信息
      * @param Socket $socket
      * @param int    $workerId
      * @param mixed  $data
