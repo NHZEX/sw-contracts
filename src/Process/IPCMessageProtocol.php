@@ -84,16 +84,16 @@ class IPCMessageProtocol
     /**
      * 尝试从数据块中合并数据
      * @param string $data
-     * @return string|array|null
+     * @return array|null [$protocol, $form_id, $data]
      */
-    public function read(string $data)
+    public function read(string $data): ?array
     {
         if (empty($data)) {
-            return false;
+            return null;
         }
         $unpack = unpack('Cprotocol/Nwid/Nmid/Cdone', $data);
-        if (!$unpack) {
-            return false;
+        if (false === $unpack) {
+            throw new RuntimeException('unpack failure');
         }
 
         [
