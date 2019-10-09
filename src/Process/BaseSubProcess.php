@@ -192,7 +192,7 @@ abstract class BaseSubProcess
             $unix = $this->pool->getWorkerUnix($this->workerId);
             $socket = new Socket(AF_UNIX, SOCK_DGRAM, 0);
             if (false === $socket->bind($unix)) {
-                throw new RuntimeException("bind unix failed: ({$socket->errCode}){$socket->errMsg}");
+                throw new RuntimeException("bind unix({$unix}) failed: ({$socket->errCode}){$socket->errMsg}");
             }
             while ($this->running) {
                 try {
@@ -223,6 +223,7 @@ abstract class BaseSubProcess
                     continue;
                 }
             }
+            $socket->close();
         });
     }
 
