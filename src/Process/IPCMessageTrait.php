@@ -49,10 +49,34 @@ trait IPCMessageTrait
      * @param int    $workerId
      * @param mixed  $data
      */
-    protected function sendIPCMessage(Socket $socket, int $workerId, string $data): void
+    protected function sendSocketMessage(Socket $socket, int $workerId, string $data): void
     {
         foreach ($this->ipcBuffer->generateMsgChunk($workerId, $data) as $chunk) {
             $send_len = $socket->sendAll($chunk);
+            if (false === $send_len) {
+                throw new RuntimeException("ipc send data failed: ({$socket->errCode}){$socket->errMsg}");
+            }
+            $len = strlen($chunk);
+            if ($send_len > $len) {
+                throw new RuntimeException("wrong data chunk transmission length {$len} !== {$send_len}");
+            }
+        }
+    }
+
+    /**
+     * 发送IPC信息
+     * @param string $unix
+     * @param int    $workerId
+     * @param mixed  $data
+     */
+    protected function sendUnixMessage(string $unix, int $workerId, string $data): void
+    {
+        if (!is_readable($unix)) {
+            throw new RuntimeException("data transmission failed: $unix can't read");
+        }
+        $socket = new Socket(AF_UNIX, SOCK_DGRAM, 0);
+        foreach ($this->ipcBuffer->generateMsgChunk($workerId, $data) as $chunk) {
+            $send_len = $socket->sendto($unix, 0, $chunk);
             if (false === $send_len) {
                 throw new RuntimeException("data transmission failed: ({$socket->errCode}){$socket->errMsg}");
             }

@@ -15,6 +15,16 @@ use unzxin\zswCore\Process\PoolDrive\SwoolePool;
 class ProcessPool
 {
     /**
+     * @var string
+     */
+    private $instanceId;
+
+    /**
+     * @var string
+     */
+    private $unixPrefix = 'zsw';
+
+    /**
      * @var PoolInterface
      */
     private $pool;
@@ -60,8 +70,17 @@ class ProcessPool
      */
     protected function __construct(PoolInterface $pool)
     {
+        $this->instanceId = dechex(crc32(spl_object_hash($this) . time()));
         $this->pool = $pool;
         $this->masterPid = getmypid();
+    }
+
+    /**
+     * @return string
+     */
+    public function getInstanceId(): string
+    {
+        return $this->instanceId;
     }
 
     /**
@@ -70,6 +89,14 @@ class ProcessPool
     public function setLogger(LoggerInterface $logger): void
     {
         $this->logger = $logger;
+    }
+
+    /**
+     * @param string $unixPrefix
+     */
+    public function setUnixPrefix(string $unixPrefix): void
+    {
+        $this->unixPrefix = $unixPrefix;
     }
 
     /**
@@ -119,6 +146,15 @@ class ProcessPool
     public function getWorkerProcess(int $workerId): ?Process
     {
         return $this->pool->getWorkerProcess($workerId);
+    }
+
+    /**
+     * @param int $workerId
+     * @return string
+     */
+    public function getWorkerUnix(int $workerId)
+    {
+        return "/tmp/{$this->unixPrefix}.{$this->instanceId}.{$workerId}.sock";
     }
 
     /**

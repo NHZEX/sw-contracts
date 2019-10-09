@@ -8,6 +8,7 @@ use Exception;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Swoole\Coroutine;
+use Swoole\Coroutine\Socket;
 use Swoole\Process;
 use Swoole\Timer;
 use unzxin\zswCore\ProcessPool;
@@ -132,7 +133,7 @@ abstract class BaseSubProcess
         return $this->process = new Process(
             Closure::fromCallable([$this, 'entrance']),
             false,
-            SOCK_STREAM,
+            0,
             true
         );
     }
@@ -188,10 +189,11 @@ abstract class BaseSubProcess
     protected function listenPipeMessage()
     {
         Coroutine::create(function () {
-            /** @var Process $process */
-            $process = $this->pool->getWorkerProcess($this->workerId);
-            $socket  = $process->exportSocket();
-
+            $unix = $this->pool->getWorkerUnix($this->workerId);
+            $socket = new Socket(AF_UNIX, SOCK_DGRAM, 0);
+            if (false === $socket->bind($unix)) {
+                throw new RuntimeException("bind unix failed: ({$socket->errCode}){$socket->errMsg}");
+            }
             while ($this->running) {
                 try {
                     if (null === $payload = $this->recvIPCMessage($socket, 2.0)) {
@@ -231,9 +233,15 @@ abstract class BaseSubProcess
      */
     protected function sendMessage($data, string $pipeName)
     {
-        $socker = $this->pool->getWorkerSocket($pipeName);
+
+        $unix = $this->pool->getWorkerUnix($this->pool->getWorkerId($pipeName));
+        if (!is_readable($unix)) {
+            throw new RuntimeException("ipc unix failed: $unix can't read");
+        }
+        $socket = new Socket(AF_UNIX, SOCK_DGRAM, 0);
+        $socket->connect($unix);
         $data   = serialize($data);
-        $this->sendIPCMessage($socker, $this->workerId, $data);
+        $this->sendSocketMessage($socket, $this->workerId, $data);
     }
 
     /**

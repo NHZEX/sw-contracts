@@ -75,7 +75,7 @@ class SwoolePool implements PoolInterface
 
     public function start(): void
     {
-        $this->swPool = new Pool(count($this->workers), SWOOLE_IPC_UNIXSOCK, 0, true);
+        $this->swPool = new Pool(count($this->workers), 0, 0, true);
         $this->swPool->on('WorkerStart', Closure::fromCallable([$this, 'onWorkerStart']));
         $this->swPool->on('WorkerStop', Closure::fromCallable([$this, 'onWorkerStop']));
         $this->swPool->on('Start', Closure::fromCallable([$this, 'onStart']));
