@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace unzxin\zswCore;
 
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Swoole\Coroutine\Socket;
 use Swoole\Process;
 use Swoole\Server;
@@ -23,6 +24,11 @@ class ProcessPool
      * @var string
      */
     private $unixPrefix = 'zsw';
+
+    /**
+     * @var string
+     */
+    private $unixDir = '/tmp';
 
     /**
      * @var PoolInterface
@@ -154,7 +160,7 @@ class ProcessPool
      */
     public function getWorkerUnix(int $workerId)
     {
-        return "/tmp/{$this->unixPrefix}.{$this->instanceId}.{$workerId}.sock";
+        return "{$this->unixDir}/{$this->unixPrefix}.{$this->instanceId}.{$workerId}.sock";
     }
 
     /**
@@ -187,8 +193,22 @@ class ProcessPool
 
     public function start()
     {
+        $this->unixPreCheck();
         $this->pool->setWorkers($this->workers);
         $this->pool->setLogger($this->logger);
         $this->pool->start();
+    }
+
+    protected function unixPreCheck()
+    {
+        if (!is_writable($this->unixDir)) {
+            throw new RuntimeException("the dir({$this->unixDir}) is not writable");
+        }
+        foreach ($this->workers as $worker) {
+            $unix = $this->getWorkerUnix($worker->getWorkerId());
+            if (is_file($unix)) {
+                throw new RuntimeException("the unix({$unix}) already exists");
+            }
+        }
     }
 }
