@@ -55,6 +55,14 @@ class SwoolePool implements PoolInterface
         $this->workers = $workers;
     }
 
+    /**
+     * @return int
+     */
+    public function getMasterPid(): int
+    {
+        return $this->swPool->master_pid;
+    }
+
     public function onPoolStart(callable $call): void
     {
         $this->onPoolStart = $call;

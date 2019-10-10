@@ -58,6 +58,11 @@ class BasicPool implements PoolInterface
         $this->workers = $workers;
     }
 
+    public function getMasterPid(): int
+    {
+        return $this->server->manager_pid;
+    }
+
     public function onPoolStart(callable $call): void
     {
         $this->onPoolStart = $call;

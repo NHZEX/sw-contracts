@@ -22,6 +22,8 @@ interface PoolInterface
 
     public function onPoolStart(callable $call): void;
 
+    public function getMasterPid(): int;
+
     /**
      * @param int $workerId
      * @return Process|null

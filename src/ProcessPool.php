@@ -51,11 +51,6 @@ class ProcessPool
     private $workerId = 0;
 
     /**
-     * @var int
-     */
-    private $masterPid = 0;
-
-    /**
      * @var LoggerInterface
      */
     private $logger;
@@ -78,7 +73,6 @@ class ProcessPool
     {
         $this->instanceId = dechex(crc32(spl_object_hash($this) . time()));
         $this->pool = $pool;
-        $this->masterPid = getmypid();
     }
 
     /**
@@ -110,7 +104,15 @@ class ProcessPool
      */
     public function getMasterPid(): int
     {
-        return $this->masterPid;
+        return $this->pool->getMasterPid();
+    }
+
+    /**
+     * @param callable $call
+     */
+    public function onStart(callable $call)
+    {
+        $this->pool->onPoolStart($call);
     }
 
     /**
